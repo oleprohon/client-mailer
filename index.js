@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const cors = require('cors');
 const nodemailer = require("nodemailer");
 const moment = require('moment');
 const { google } = require('googleapis');
@@ -11,6 +12,18 @@ const port = process.env.PORT;
 const OAUTH_PLAYGROUND = 'https://developers.google.com/oauthplayground';
 
 api.use(express.urlencoded());
+
+const allowList = ['https://baobab.finance', 'baobab.finance', 'https://immersion360.studio', 'immersion360.studio'];
+const corsOptionsDelefate = function(req, callback) {
+    let corsOptions;
+
+    if (allowlist.indexOf(req.header('Origin')) !== -1) {
+        corsOptions = { origin: true };
+      } else {
+        corsOptions = { origin: false };
+      }
+      callback(null, corsOptions);
+};
 
 const oauth2Client = new OAuth2(process.env.G_CLIENT_ID, process.env.G_CLIENT_SECRET, process.env.G_REFRESH_TOKEN, OAUTH_PLAYGROUND);
 
@@ -61,7 +74,7 @@ const authorizedHosts = [
     { host: 'immersion360.studio', token: 'W3th04OFVQllnQZX8YFv', format: formatBaobab, recipient: 'olivier@immersion360.studio' },
 ];
 
-api.post('/send', async (req, res) => {
+api.post('/send', cors(corsOptionsDelefate), async (req, res) => {
     let reqToken = req.body.token;
     let reqHost = req.headers.host;
 
