@@ -1,0 +1,26 @@
+{
+  "name": "client-mailer",
+  "version": "0.0.1",
+  "description": "Easy way to accept frontend requests from specific domains and send email securely.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oleprohon/client-mailer.git"
+  },
+  "author": "Olivier D. Leprohon",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/oleprohon/client-mailer/issues"
+  },
+  "homepage": "https://github.com/oleprohon/client-mailer#readme",
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "googleapis": "^78.0.0",
+    "moment": "^2.29.1",
+    "nodemailer": "^6.6.2"
+  }
+}
