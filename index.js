@@ -93,6 +93,10 @@ api.post('/send', async (req, res) => {
     }
 });
 
+api.get('/', (req, res) => {
+    res.status(200).send('API online.');
+})
+
 api.listen(port, () => {
     console.log(`Running on port ${port}`);
 });

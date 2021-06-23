@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../baobab/baobab-finance"
 		}
 	],
 	"settings": {}
