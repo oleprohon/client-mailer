@@ -14,10 +14,11 @@ const OAUTH_PLAYGROUND = 'https://developers.google.com/oauthplayground';
 api.use(express.urlencoded());
 
 const allowList = ['https://baobab.finance', 'baobab.finance', 'https://immersion360.studio', 'immersion360.studio'];
-const corsOptionsDelefate = function(req, callback) {
+
+const corsOptionsDelegate = function(req, callback) {
     let corsOptions;
 
-    if (allowlist.indexOf(req.header('Origin')) !== -1) {
+    if (allowList.indexOf(req.header('Origin')) !== -1) {
         corsOptions = { origin: true };
       } else {
         corsOptions = { origin: false };
@@ -74,7 +75,7 @@ const authorizedHosts = [
     { host: 'immersion360.studio', token: 'W3th04OFVQllnQZX8YFv', format: formatBaobab, recipient: 'olivier@immersion360.studio' },
 ];
 
-api.post('/send', cors(corsOptionsDelefate), async (req, res) => {
+api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
     let reqToken = req.body.token;
     let reqHost = req.headers.host;
 
