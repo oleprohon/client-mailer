@@ -81,7 +81,7 @@ api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
     let reqToken = req.body.token;
     let reqHost = req.headers.host;
 
-    console.log(req.headers);
+    console.log(req);
 
     try {
 
