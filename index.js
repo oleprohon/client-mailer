@@ -75,7 +75,7 @@ const authorizedHosts = [
     { host: 'immersion360.studio', token: 'W3th04OFVQllnQZX8YFv', format: formatBaobab, recipient: 'olivier@immersion360.studio' },
 ];
 
-api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
+api.post('/send', async (req, res) => {
     let reqToken = req.body.token;
     let reqHost = req.headers.host;
 
