@@ -90,7 +90,7 @@ const authorizedHosts = [
 
 api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
     let reqToken = req.body.token;
-    let reqHost = req.headers['origin'];
+    let reqHost = req.headers['Origin'];
 
     try {
 
