@@ -68,20 +68,28 @@ const formatBaobab = (body) => {
     return [body.subject, content];
 }
 
+const formatI360 = (body) => {
+    let content = `
+    Nom: ${body.name} <br />
+    Courriel: ${body.email} <br />
+    Téléphone: ${body.phone} <br />
+    Industrie: ${body.industry} <br />
+    Message: <br />
+    ${body.message}`;
+
+    return ["Nouvelle demande de contact", content];
+}
+
 const authorizedHosts = [
     { host: 'localhost:8181', token: 'Tn2wyFCAkrlaAelEnv10', format: formatBaobab, recipient: 'olivier@oasis.engineering' },
     { host: 'https://baobab.finance', token: 'Ut3GFuVEHmhyL6YOhnfs', format: formatBaobab, recipient: 'olivier@oasis.engineering' },
-    { host: 'https://immersion360.studio', token: 'W3th04OFVQllnQZX8YFv', format: formatBaobab, recipient: 'olivier@immersion360.studio' },
-    { host: '206.214.230.108', token: 'Tn2wyFCAkrlaAelEnv11', format: formatBaobab, recipient: 'james@immersion360.studio' },
-    { host: 'https://immersion-360-dev-gvqbz.ondigitalocean.app', token: 'oiq98BfHdf9fbk', format: formatBaobab, recipient: 'james@immersion360.studio' },
-    { host: 'https://bge-quebec.com', token: 'xnQJJrZMdqeZ', format: formatBaobab, recipient: 'james@immersion360.studio' },
+    { host: 'https://immersion360.studio', token: 'W3th04OFVQllnQZX8YFv', format: formatI360, recipient: 'olivier@immersion360.studio' },
+    { host: 'https://immersion-360-dev-gvqbz.ondigitalocean.app', token: 'oiq98BfHdf9fbk', format: formatI360, recipient: 'james@immersion360.studio' },
 ];
 
 api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
     let reqToken = req.body.token;
     let reqHost = req.headers['origin'];
-
-    //console.log(req.headers);
 
     try {
 
