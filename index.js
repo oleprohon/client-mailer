@@ -79,9 +79,9 @@ const authorizedHosts = [
 
 api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
     let reqToken = req.body.token;
-    let reqHost = req.headers.host;
+    let reqHost = req.headers['x-forwarded-for'];
 
-    console.log(req);
+    console.log(reqHost);
 
     try {
 
