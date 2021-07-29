@@ -81,7 +81,7 @@ api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
     let reqToken = req.body.token;
     let reqHost = req.headers['x-forwarded-for'];
 
-    console.log(reqHost);
+    console.log(req.headers);
 
     try {
 
