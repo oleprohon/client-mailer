@@ -13,17 +13,16 @@ const OAUTH_PLAYGROUND = 'https://developers.google.com/oauthplayground';
 
 api.use(express.urlencoded());
 
-const allowList = ['https://baobab.finance', 'baobab.finance', 'https://immersion360.studio', 'immersion360.studio'];
+const allowList = ['https://baobab.finance', 'https://immersion360.studio', 'https://bge-quebec.com'];
 
 const corsOptionsDelegate = function(req, callback) {
     let corsOptions;
-
     if (allowList.indexOf(req.header('Origin')) !== -1) {
         corsOptions = { origin: true };
-      } else {
+    } else {
         corsOptions = { origin: false };
-      }
-      callback(null, corsOptions);
+    }
+    callback(null, corsOptions);
 };
 
 const oauth2Client = new OAuth2(process.env.G_CLIENT_ID, process.env.G_CLIENT_SECRET, process.env.G_REFRESH_TOKEN, OAUTH_PLAYGROUND);
@@ -74,7 +73,8 @@ const authorizedHosts = [
     { host: 'baobab.finance', token: 'Ut3GFuVEHmhyL6YOhnfs', format: formatBaobab, recipient: 'olivier@oasis.engineering' },
     { host: 'immersion360.studio', token: 'W3th04OFVQllnQZX8YFv', format: formatBaobab, recipient: 'olivier@immersion360.studio' },
     { host: '206.214.230.108', token: 'Tn2wyFCAkrlaAelEnv11', format: formatBaobab, recipient: 'james@immersion360.studio' },
-    { host: 'immersion-360-dev-gvqbz.ondigitalocean.app', token: 'oiq98BfHdf9fbk', format: formatBaobab, recipient: 'james@immersion360.studio' }
+    { host: 'immersion-360-dev-gvqbz.ondigitalocean.app', token: 'oiq98BfHdf9fbk', format: formatBaobab, recipient: 'james@immersion360.studio' },
+    { host: 'bge-quebec.com', token: 'xnQJJrZMdqeZ', format: formatBaobab, recipient: 'james@immersion360.studio' },
 ];
 
 api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
