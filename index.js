@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const nodemailer = require("nodemailer");
 const moment = require('moment');
+const fetch = require("node-fetch");
 const { google } = require('googleapis');
 const { OAuth2 } = google.auth;
 
@@ -63,19 +64,21 @@ const sendMail = async (to, subject, content) => {
 const verifyReCaptchaSecretKey = async (req, secretKey, token, callback) => {
     var ip = (req.headers['x-forwarded-for'] || '').split(',').shift() || (req.socket || '').remoteAddress;
     var requestOptions = {
-        crossDomain: true,
-        referrerPolicy: 'origin',
         method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', 'Origin': window.location.origin },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
         body: new URLSearchParams({
             secret: secretKey,
             response: token,
             remoteip: ip,
         })
     };
-    fetch('https://www.google.com/recaptcha/api/siteverify', requestOptions).then(function(response) {
-        callback(true);
+    fetch('https://www.google.com/recaptcha/api/siteverify', requestOptions)
+    .then(response=>response.json())
+    .then(function(response) {
+		if (!response.success) {
+			console.log(response);
+		}
+        callback(response.success);
     });
 }
 
