@@ -60,6 +60,25 @@ const sendMail = async (to, subject, content) => {
     }
 };
 
+const verifyReCaptchaSecretKey = async (req, secretKey, token, callback) => {
+    var ip = (req.headers['x-forwarded-for'] || '').split(',').shift() || (req.socket || '').remoteAddress;
+    var requestOptions = {
+        crossDomain: true,
+        referrerPolicy: 'origin',
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', 'Origin': window.location.origin },
+        body: new URLSearchParams({
+            secret: secretKey,
+            response: token,
+            remoteip: ip,
+        })
+    };
+    fetch('https://www.google.com/recaptcha/api/siteverify', requestOptions).then(function(response) {
+        callback(true);
+    });
+}
+
 const formatBaobab = (body) => {
     let content = `From: ${body.email} <br /><br />
     Message: <br />
@@ -81,11 +100,11 @@ const formatI360 = (body) => {
 }
 
 const authorizedHosts = [
-    { host: 'http://localhost', token: '7gCWXKJc6fHPS98s4gN7db4BdyWQQs', format: formatI360, recipient: 'james@immersion360.studio' },
-    { host: 'http://localhost:8181', token: 'Tn2wyFCAkrlaAelEnv10', format: formatBaobab, recipient: 'olivier@oasis.engineering' },
-    { host: 'https://baobab.finance', token: 'Ut3GFuVEHmhyL6YOhnfs', format: formatBaobab, recipient: 'olivier@oasis.engineering' },
-    { host: 'https://immersion360.studio', token: 'W3th04OFVQllnQZX8YFv', format: formatI360, recipient: 'olivier@immersion360.studio' },
-    { host: 'https://immersion-360-dev-gvqbz.ondigitalocean.app', token: 'oiq98BfHdf9fbk', format: formatI360, recipient: 'james@immersion360.studio' },
+    { host: 'http://localhost', token: '7gCWXKJc6fHPS98s4gN7db4BdyWQQs', format: formatI360, recipient: 'james@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
+    { host: 'http://localhost:8181', token: 'Tn2wyFCAkrlaAelEnv10', format: formatBaobab, recipient: 'olivier@oasis.engineering', reCaptchaSecretKey: '' },
+    { host: 'https://baobab.finance', token: 'Ut3GFuVEHmhyL6YOhnfs', format: formatBaobab, recipient: 'olivier@oasis.engineering', reCaptchaSecretKey: '' },
+    { host: 'https://immersion360.studio', token: 'W3th04OFVQllnQZX8YFv', format: formatI360, recipient: 'olivier@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
+    { host: 'https://immersion-360-dev-gvqbz.ondigitalocean.app', token: 'oiq98BfHdf9fbk', format: formatI360, recipient: 'james@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
 ];
 
 api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
@@ -106,14 +125,20 @@ api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
             throw new Error(`[${moment.utc().format('YYYY-MM-DD HH:mm:ss')}] Found token ${reqToken} coming from ${reqHost} but expected host is ${authorizedHost.host}.`);
         }
 
-        let [subject, content] = authorizedHost.format(req.body);
-        let result = await sendMail(authorizedHost.recipient, subject, content);
+        await verifyReCaptchaSecretKey(req, authorizedHost.reCaptchaSecretKey, (req.body.reCaptchaToken || ""), function(reCaptchaIsValid) {
+            if (reCaptchaIsValid) {
+                let [subject, content] = authorizedHost.format(req.body);
+                let result = sendMail(authorizedHost.recipient, subject, content);
 
-        if(!result) {
-            throw new Error(`[${moment.utc().format('YYYY-MM-DD HH:mm:ss')}] Unexpected error while sending the email, see logs.`);
-        }
+                if(!result) {
+                    throw new Error(`[${moment.utc().format('YYYY-MM-DD HH:mm:ss')}] Unexpected error while sending the email, see logs.`);
+                }
 
-        res.status(200).send('OK');
+                res.status(200).send('OK');
+            } else {
+                throw new Error(`[${moment.utc().format('YYYY-MM-DD HH:mm:ss')}] ReCaptcha with token ${req.body.reCaptchaToken} is not valid with user IP ${(req.headers['x-forwarded-for'] || '').split(',').shift() || (req.socket || '').remoteAddress}.`);
+            }
+        });
     } catch (e) {
         console.log(e);
         res.status(401).send("Unauthorized");
