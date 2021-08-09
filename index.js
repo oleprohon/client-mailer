@@ -113,7 +113,7 @@ api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
 
         await verifyReCaptchaSecretKey(req, authorizedHost.reCaptchaSecretKey, (req.body.reCaptchaToken || ""), function(reCaptchaIsValid) {
             if (reCaptchaIsValid) {
-                let [subject, content] = authorizedHost.format[req.body.whichForm && typeof authorizedHost.format[req.body.whichForm] !== "undefined" ? req.body.whichForm : "default"](req.body);
+                let [subject, content] = authorizedHost.format.loadContent((req.body.whichForm ? req.body.whichForm : "default"), req.body);
                 let result = sendMail(authorizedHost.recipient, subject, content);
 
                 if(!result) {

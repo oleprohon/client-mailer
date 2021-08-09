@@ -1,11 +1,18 @@
 class i360 {
 	
-	default() {
+	loadContent(whichForm, body) {
+		if (typeof this[whichForm] === "undefined") {
+			return this.default(body);
+		}
+		return this[whichForm](body);
+	}
+	
+	default(body) {
 		let content = ``;
 		return ["Nouvelle demande (défaut)", content];
 	}
 
-	homepage() {
+	homepage(body) {
 		let content = `
 Nom: ${body.name} <br />
 Courriel: ${body.email} <br />
@@ -16,7 +23,7 @@ ${body.message}`;
 		return ["Nouvelle demande de la page d’accueil", content];
 	}
 	
-	contact() {
+	contact(body) {
 		let content = `
 Nom: ${body.name} <br />
 Courriel: ${body.email} <br />
@@ -28,7 +35,7 @@ ${body.message}`;
 		return ["Nouvelle demande de la page contact", content];
 	}
 	
-	video360() {
+	video360(body) {
 		let content = `
 Nom: ${body.name} <br />
 Courriel: ${body.email} <br />
@@ -40,7 +47,7 @@ ${body.message}`;
 		return ["Nouvelle demande de la page production vidéo 360", content];
 	}
 	
-	virtualReality() {
+	virtualReality(body) {
 		let content = `
 Nom: ${body.name} <br />
 Courriel: ${body.email} <br />
