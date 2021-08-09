@@ -86,7 +86,7 @@ const verifyReCaptchaSecretKey = async (req, secretKey, token, callback) => {
 }
 
 const authorizedHosts = [
-    { host: 'http://localhost', token: '7gCWXKJc6fHPS98s4gN7db4BdyWQQs', format: i360, recipient: 'olivier@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
+    { host: 'http://localhost', token: '7gCWXKJc6fHPS98s4gN7db4BdyWQQs', format: i360, recipient: 'james@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
     { host: 'http://localhost:8181', token: 'Tn2wyFCAkrlaAelEnv10', format: baobab, recipient: 'olivier@oasis.engineering', reCaptchaSecretKey: '' },
     { host: 'https://baobab.finance', token: 'Ut3GFuVEHmhyL6YOhnfs', format: baobab, recipient: 'olivier@oasis.engineering', reCaptchaSecretKey: '' },
     { host: 'https://immersion360.studio', token: 'W3th04OFVQllnQZX8YFv', format: i360, recipient: 'olivier@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
