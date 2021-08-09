@@ -8,6 +8,9 @@ const fetch = require("node-fetch");
 const { google } = require('googleapis');
 const { OAuth2 } = google.auth;
 
+const i360 = require('./immersion360-mail-contents');
+const baobab = require('./baobab-mail-contents');
+
 const api = express();
 const port = process.env.PORT;
 const OAUTH_PLAYGROUND = 'https://developers.google.com/oauthplayground';
@@ -82,32 +85,12 @@ const verifyReCaptchaSecretKey = async (req, secretKey, token, callback) => {
     });
 }
 
-const formatBaobab = (body) => {
-    let content = `From: ${body.email} <br /><br />
-    Message: <br />
-    ${body.message}`;
-
-    return [body.subject, content];
-}
-
-const formatI360 = (body) => {
-    let content = `
-    Nom: ${body.name} <br />
-    Courriel: ${body.email} <br />
-    Téléphone: ${body.phone} <br />
-    Industrie: ${body.industry} <br />
-    Message: <br />
-    ${body.message}`;
-
-    return ["Nouvelle demande de contact", content];
-}
-
 const authorizedHosts = [
-    { host: 'http://localhost', token: '7gCWXKJc6fHPS98s4gN7db4BdyWQQs', format: formatI360, recipient: 'olivier@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
-    { host: 'http://localhost:8181', token: 'Tn2wyFCAkrlaAelEnv10', format: formatBaobab, recipient: 'olivier@oasis.engineering', reCaptchaSecretKey: '' },
-    { host: 'https://baobab.finance', token: 'Ut3GFuVEHmhyL6YOhnfs', format: formatBaobab, recipient: 'olivier@oasis.engineering', reCaptchaSecretKey: '' },
-    { host: 'https://immersion360.studio', token: 'W3th04OFVQllnQZX8YFv', format: formatI360, recipient: 'olivier@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
-    { host: 'https://immersion-360-dev-gvqbz.ondigitalocean.app', token: 'oiq98BfHdf9fbk', format: formatI360, recipient: 'olivier@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
+    { host: 'http://localhost', token: '7gCWXKJc6fHPS98s4gN7db4BdyWQQs', format: i360, recipient: 'olivier@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
+    { host: 'http://localhost:8181', token: 'Tn2wyFCAkrlaAelEnv10', format: baobab, recipient: 'olivier@oasis.engineering', reCaptchaSecretKey: '' },
+    { host: 'https://baobab.finance', token: 'Ut3GFuVEHmhyL6YOhnfs', format: baobab, recipient: 'olivier@oasis.engineering', reCaptchaSecretKey: '' },
+    { host: 'https://immersion360.studio', token: 'W3th04OFVQllnQZX8YFv', format: i360, recipient: 'olivier@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
+    { host: 'https://immersion-360-dev-gvqbz.ondigitalocean.app', token: 'oiq98BfHdf9fbk', format: i360, recipient: 'olivier@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
 ];
 
 api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
@@ -130,7 +113,7 @@ api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
 
         await verifyReCaptchaSecretKey(req, authorizedHost.reCaptchaSecretKey, (req.body.reCaptchaToken || ""), function(reCaptchaIsValid) {
             if (reCaptchaIsValid) {
-                let [subject, content] = authorizedHost.format(req.body);
+                let [subject, content] = authorizedHost.format[req.body.whichForm && typeof authorizedHost.format[req.body.whichForm] !== "undefined" ? req.body.whichForm : "default"](req.body);
                 let result = sendMail(authorizedHost.recipient, subject, content);
 
                 if(!result) {
