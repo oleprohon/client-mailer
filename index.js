@@ -10,6 +10,7 @@ const { OAuth2 } = google.auth;
 
 const i360 = require('./immersion360-mail-contents');
 const baobab = require('./baobab-mail-contents');
+const arzo = require('./arzo-mail-contents');
 
 const api = express();
 const port = process.env.PORT;
@@ -17,7 +18,7 @@ const OAUTH_PLAYGROUND = 'https://developers.google.com/oauthplayground';
 
 api.use(express.urlencoded());
 
-const allowList = ['http://localhost', 'https://baobab.finance', 'https://immersion360.studio', 'https://bge-quebec.com', 'https://immersion-360-dev-gvqbz.ondigitalocean.app'];
+const allowList = ['http://localhost', 'https://baobab.finance', 'https://immersion360.studio', 'https://bge-quebec.com', 'https://immersion-360-dev-gvqbz.ondigitalocean.app', 'https://arzo.io'];
 
 const corsOptionsDelegate = function(req, callback) {
     let corsOptions;
@@ -31,40 +32,57 @@ const corsOptionsDelegate = function(req, callback) {
 
 const oauth2Client = new OAuth2(process.env.G_CLIENT_ID, process.env.G_CLIENT_SECRET, process.env.G_REFRESH_TOKEN, OAUTH_PLAYGROUND);
 
-const sendMail = async (to, subject, content) => {
+const sendMail = async (to, subject, content, authorizedHost, callback) => {
     try {
         oauth2Client.setCredentials({ refresh_token: process.env.G_REFRESH_TOKEN });
         const accessToken = oauth2Client.getAccessToken();
 
-        const smtpTransport = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                type: 'OAuth2',
-                user: process.env.EMAIL,
-                clientId: process.env.G_CLIENT_ID,
-                clientSecret: process.env.G_CLIENT_SECRET,
-                refreshToken: process.env.G_REFRESH_TOKEN,
-                accessToken
-            },
-        });
+        var smtpTransport;
+        var from;
+        if (typeof authorizedHost.smtp === "undefined") {
+            smtpTransport = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    type: 'OAuth2',
+                    user: process.env.EMAIL,
+                    clientId: process.env.G_CLIENT_ID,
+                    clientSecret: process.env.G_CLIENT_SECRET,
+                    refreshToken: process.env.G_REFRESH_TOKEN,
+                    accessToken
+                },
+            });
+            from = process.env.EMAIL;
+        } else {
+            smtpTransport = nodemailer.createTransport(authorizedHost.smtp);
+            from = authorizedHost.from;
+        }
 
         const mailOptions = {
-            from: process.env.EMAIL,
+            from: from,
             to: to,
             subject: subject,
             html: content,
         };
 
-        let mailSent = await smtpTransport.sendMail(mailOptions);
-
-        return true;
+        smtpTransport.sendMail(mailOptions, (err, info) => {
+            if (err) {
+                console.log(err);
+                callback(false);
+            } else {
+                callback(true);
+            }
+        });
     } catch (e) {
         console.log(e);
-        return false;
+        callback(false);
     }
 };
 
 const verifyReCaptchaSecretKey = async (req, secretKey, token, callback) => {
+    if (process.env.MODE === "testing") {
+        callback(true);
+        return;
+    }
     var ip = (req.headers['x-forwarded-for'] || '').split(',').shift() || (req.socket || '').remoteAddress;
     var requestOptions = {
         method: 'POST',
@@ -91,6 +109,8 @@ const authorizedHosts = [
     { host: 'https://baobab.finance', token: 'Ut3GFuVEHmhyL6YOhnfs', format: baobab, recipient: 'olivier@oasis.engineering', reCaptchaSecretKey: '' },
     { host: 'https://immersion360.studio', token: 'W3th04OFVQllnQZX8YFv', format: i360, recipient: 'olivier@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
     { host: 'https://immersion-360-dev-gvqbz.ondigitalocean.app', token: 'oiq98BfHdf9fbk', format: i360, recipient: 'olivier@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
+    { host: 'http://localhost:3000', token: 'BYgixI2KoDGoETib0KMn1xscnSZJjrWMBUcKbKGM7dl4MLn9JihzyEPc514f', format: arzo, recipient: 'email', smtp: JSON.parse(process.env.ARZO_SMTP), from: 'application@arzo.io', reCaptchaSecretKey: '6LfWTA0cAAAAAPwiAvXtCA5Vf-9nqel7rLshLjRy' }, //reCaptcha public key: 6LfWTA0cAAAAAHX4SK6AUiuXpDs4H4BqYWP2giGW
+    { host: 'https://arzo.io', token: 'n3l3wJi4oe1qCtQbGxHn4qxymJckGSTYnYuaR7WMFcm2whhgK2hFRitpBHjR', format: arzo, recipient: 'email', smtp: JSON.parse(process.env.ARZO_SMTP), from: 'application@arzo.io', reCaptchaSecretKey: '6LfWTA0cAAAAAPwiAvXtCA5Vf-9nqel7rLshLjRy' }, //reCaptcha public key: 6LfWTA0cAAAAAHX4SK6AUiuXpDs4H4BqYWP2giGW
 ];
 
 api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
@@ -98,7 +118,6 @@ api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
     let reqHost = req.headers['origin'] || "http://localhost";
 
     try {
-
         let authorizedHost = authorizedHosts.find(auth => {
             return auth.token == reqToken;
         });
@@ -114,15 +133,20 @@ api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
         await verifyReCaptchaSecretKey(req, authorizedHost.reCaptchaSecretKey, (req.body.reCaptchaToken || ""), function(reCaptchaIsValid) {
             if (reCaptchaIsValid) {
                 let [subject, content] = authorizedHost.format.loadContent((req.body.whichForm ? req.body.whichForm : "default"), req.body);
-                let result = sendMail(authorizedHost.recipient, subject, content);
-
-                if(!result) {
-                    throw new Error(`[${moment.utc().format('YYYY-MM-DD HH:mm:ss')}] Unexpected error while sending the email, see logs.`);
+                var to = authorizedHost.recipient;
+                if (to === "email") {
+                    to = req.body.email;
                 }
-
-                res.status(200).send('OK');
+                sendMail(to, subject, content, authorizedHost, function(result) {
+                    if (!result) {
+                        console.log(`[${moment.utc().format('YYYY-MM-DD HH:mm:ss')}] Unexpected error while sending the email, see logs.`);
+                        res.status(500).send('Error');
+                    }
+                    res.status(200).send('OK');
+                });
             } else {
-                throw new Error(`[${moment.utc().format('YYYY-MM-DD HH:mm:ss')}] ReCaptcha with token ${req.body.reCaptchaToken} is not valid with user IP ${(req.headers['x-forwarded-for'] || '').split(',').shift() || (req.socket || '').remoteAddress}.`);
+                console.log(`[${moment.utc().format('YYYY-MM-DD HH:mm:ss')}] ReCaptcha with token ${req.body.reCaptchaToken} is not valid with user IP ${(req.headers['x-forwarded-for'] || '').split(',').shift() || (req.socket || '').remoteAddress}.`);
+                res.status(401).send('Unauthorised');
             }
         });
     } catch (e) {
