@@ -18,7 +18,14 @@ const OAUTH_PLAYGROUND = 'https://developers.google.com/oauthplayground';
 
 api.use(express.urlencoded());
 
-const allowList = ['http://localhost', 'https://baobab.finance', 'https://immersion360.studio', 'https://bge-quebec.com', 'https://immersion-360-dev-gvqbz.ondigitalocean.app', 'https://arzo.io'];
+const allowList = [
+	'http://localhost',
+	'https://baobab.finance',
+	'https://immersion360.studio',
+	'https://bge-quebec.com',
+	'https://immersion-360-dev-gvqbz.ondigitalocean.app',
+	'https://arzo.io'
+];
 
 const corsOptionsDelegate = function(req, callback) {
     let corsOptions;
@@ -79,7 +86,8 @@ const sendMail = async (to, subject, content, authorizedHost, callback) => {
 };
 
 const verifyReCaptchaSecretKey = async (req, secretKey, token, callback) => {
-    if (process.env.MODE === "testing") {
+	// If testing mode or if the secret key is null, this process doesn’t need to use reCaptcha and so, no validation is required.
+    if (process.env.MODE === "testing" || secretKey === null) {
         callback(true);
         return;
     }
@@ -103,15 +111,53 @@ const verifyReCaptchaSecretKey = async (req, secretKey, token, callback) => {
     });
 }
 
-const authorizedHosts = [
-    { host: 'http://localhost', token: '7gCWXKJc6fHPS98s4gN7db4BdyWQQs', format: i360, recipient: 'james@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
-    { host: 'http://localhost:8181', token: 'Tn2wyFCAkrlaAelEnv10', format: baobab, recipient: 'olivier@oasis.engineering', reCaptchaSecretKey: '' },
-    { host: 'https://baobab.finance', token: 'Ut3GFuVEHmhyL6YOhnfs', format: baobab, recipient: 'olivier@oasis.engineering', reCaptchaSecretKey: '' },
-    { host: 'https://immersion360.studio', token: 'W3th04OFVQllnQZX8YFv', format: i360, recipient: 'olivier@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
-    { host: 'https://immersion-360-dev-gvqbz.ondigitalocean.app', token: 'oiq98BfHdf9fbk', format: i360, recipient: 'olivier@immersion360.studio', reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw' },
-    { host: 'http://localhost:3000', token: 'BYgixI2KoDGoETib0KMn1xscnSZJjrWMBUcKbKGM7dl4MLn9JihzyEPc514f', format: arzo, recipient: 'email', smtp: JSON.parse(process.env.ARZO_SMTP), from: 'application@arzo.io', reCaptchaSecretKey: '6LfWTA0cAAAAAPwiAvXtCA5Vf-9nqel7rLshLjRy' }, //reCaptcha public key: 6LfWTA0cAAAAAHX4SK6AUiuXpDs4H4BqYWP2giGW
-    { host: 'https://arzo.io', token: 'n3l3wJi4oe1qCtQbGxHn4qxymJckGSTYnYuaR7WMFcm2whhgK2hFRitpBHjR', format: arzo, recipient: 'email', smtp: JSON.parse(process.env.ARZO_SMTP), from: 'application@arzo.io', reCaptchaSecretKey: '6LfWTA0cAAAAAPwiAvXtCA5Vf-9nqel7rLshLjRy' }, //reCaptcha public key: 6LfWTA0cAAAAAHX4SK6AUiuXpDs4H4BqYWP2giGW
-];
+const authorizedHosts = [{
+	host: 'http://localhost',
+	token: '7gCWXKJc6fHPS98s4gN7db4BdyWQQs',
+	format: i360,
+	recipient: 'james@immersion360.studio',
+	reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw'
+}, {
+	host: 'http://localhost:8181',
+	token: 'Tn2wyFCAkrlaAelEnv10',
+	format: baobab,
+	recipient: 'olivier@oasis.engineering',
+	reCaptchaSecretKey: null // If null, this host doesn’t use reCaptcha and no validation required.
+}, {
+	host: 'https://baobab.finance',
+	token: 'Ut3GFuVEHmhyL6YOhnfs',
+	format: baobab,
+	recipient: 'olivier@oasis.engineering',
+	reCaptchaSecretKey: null // If null, this host doesn’t use reCaptcha and no validation required.
+}, {
+	host: 'https://immersion360.studio',
+	token: 'W3th04OFVQllnQZX8YFv',
+	format: i360,
+	recipient: 'olivier@immersion360.studio',
+	reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw'
+}, {
+	host: 'https://immersion-360-dev-gvqbz.ondigitalocean.app',
+	token: 'oiq98BfHdf9fbk',
+	format: i360,
+	recipient: 'olivier@immersion360.studio',
+	reCaptchaSecretKey: '6LdwztUbAAAAAPsh1FiypsXD0UCha2-ITGFYg7Cw'
+}, {
+	host: 'http://localhost:3000',
+	token: 'BYgixI2KoDGoETib0KMn1xscnSZJjrWMBUcKbKGM7dl4MLn9JihzyEPc514f',
+	format: arzo,
+	recipient: 'email',
+	smtp: JSON.parse(process.env.ARZO_SMTP),
+	from: 'application@arzo.io',
+	reCaptchaSecretKey: '6LfWTA0cAAAAAPwiAvXtCA5Vf-9nqel7rLshLjRy' //reCaptcha public key: 6LfWTA0cAAAAAHX4SK6AUiuXpDs4H4BqYWP2giGW
+}, {
+	host: 'https://arzo.io',
+	token: 'n3l3wJi4oe1qCtQbGxHn4qxymJckGSTYnYuaR7WMFcm2whhgK2hFRitpBHjR',
+	format: arzo,
+	recipient: 'email',
+	smtp: JSON.parse(process.env.ARZO_SMTP),
+	from: 'application@arzo.io',
+	reCaptchaSecretKey: '6LfWTA0cAAAAAPwiAvXtCA5Vf-9nqel7rLshLjRy' //reCaptcha public key: 6LfWTA0cAAAAAHX4SK6AUiuXpDs4H4BqYWP2giGW
+}];
 
 api.post('/send', cors(corsOptionsDelegate), async (req, res) => {
     let reqToken = req.body.token;
