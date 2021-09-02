@@ -14,10 +14,11 @@ class baobab {
 
 	static homepage(body) {
 		let content = `From: ${body.email} <br /><br />
+	Subject: ${body.subject} <br /><br />
 	Message: <br />
 	${body.message}`;
 
-		return [body.subject, content];
+		return ["Nouvelle demande depuis le formulaire sur baobab.finance", content];
 	}
 }
 
